@@ -5,7 +5,8 @@
 .circle {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
   animation: float-circle 10s ease-in-out infinite;
 }
 
