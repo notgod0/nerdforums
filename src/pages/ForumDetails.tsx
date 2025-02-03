@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
+interface Reply {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+}
+
 interface Forum {
   id: string;
   title: string;
@@ -15,21 +22,14 @@ interface Forum {
   likes: number;
 }
 
-interface Reply {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-}
-
 const ForumDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [forum, setForum] = useState<Forum | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [newReply, setNewReply] = useState("");
-  const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchForum = async () => {
@@ -50,10 +50,7 @@ const ForumDetails = () => {
           .order("created_at", { ascending: true });
 
         if (repliesError) throw repliesError;
-        setReplies(repliesData);
-
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+        setReplies(repliesData || []);
       } catch (error: any) {
         toast.error(error.message);
         navigate("/");
@@ -61,6 +58,14 @@ const ForumDetails = () => {
     };
 
     fetchForum();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [id, navigate]);
 
   const handleReply = async (e: React.FormEvent) => {
@@ -80,17 +85,18 @@ const ForumDetails = () => {
 
       if (error) throw error;
 
-      const { data: newReplies, error: repliesError } = await supabase
+      setNewReply("");
+      toast.success("Reply posted successfully!");
+
+      // Refresh replies
+      const { data, error: fetchError } = await supabase
         .from("replies")
         .select("*")
         .eq("forum_id", id)
         .order("created_at", { ascending: true });
 
-      if (repliesError) throw repliesError;
-      
-      setReplies(newReplies);
-      setNewReply("");
-      toast.success("Reply added successfully!");
+      if (fetchError) throw fetchError;
+      setReplies(data || []);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -122,54 +128,64 @@ const ForumDetails = () => {
   if (!forum) return null;
 
   return (
-    <div className="min-h-screen py-12 px-4">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <div className="min-h-screen py-8 px-4">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <Button
+          variant="outline"
+          onClick={() => navigate("/")}
+          className="mb-8"
+        >
+          ← Back to Forums
+        </Button>
+
         <div className="bg-white/5 p-8 rounded-lg border border-white/10">
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-3xl font-bold">{forum.title}</h1>
-            <Button onClick={handleLike} variant="outline">
-              ❤️ {forum.likes || 0}
-            </Button>
+            <Button onClick={handleLike}>❤️ {forum.likes || 0}</Button>
           </div>
-          <p className="text-gray-300 mb-4 whitespace-pre-wrap">{forum.description}</p>
-          <div className="flex gap-2 flex-wrap">
+          <p className="text-gray-300 mb-6">{forum.description}</p>
+          <div className="flex gap-2 mb-4">
             {forum.tags?.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-1 rounded-full text-sm bg-purple-500/20 text-purple-300"
-              >
-                {tag}
-              </span>
+              <span key={tag} className="forum-tag">{tag}</span>
             ))}
+          </div>
+          <div className="text-sm text-gray-400">
+            Posted on {new Date(forum.created_at).toLocaleDateString()}
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h2 className="text-2xl font-bold">Replies</h2>
-          {replies.map((reply) => (
-            <div
-              key={reply.id}
-              className="bg-white/5 p-6 rounded-lg border border-white/10"
-            >
-              <p className="text-gray-300 whitespace-pre-wrap">{reply.content}</p>
-              <p className="text-sm text-gray-400 mt-2">
-                {new Date(reply.created_at).toLocaleDateString()}
-              </p>
-            </div>
-          ))}
-
+          
           <form onSubmit={handleReply} className="space-y-4">
             <Textarea
               value={newReply}
               onChange={(e) => setNewReply(e.target.value)}
-              placeholder="Write your reply..."
-              required
-              className="bg-white/5 border-white/10"
+              placeholder={user ? "Write your reply..." : "Please login to reply"}
+              disabled={!user || loading}
+              className="bg-white/5 border-white/10 min-h-[100px]"
             />
-            <Button type="submit" disabled={loading}>
-              {loading ? "Sending..." : "Send Reply"}
+            <Button
+              type="submit"
+              disabled={!user || loading || !newReply.trim()}
+            >
+              {loading ? "Posting..." : "Post Reply"}
             </Button>
           </form>
+
+          <div className="space-y-4">
+            {replies.map((reply) => (
+              <div
+                key={reply.id}
+                className="bg-white/5 p-6 rounded-lg border border-white/10"
+              >
+                <p className="text-gray-300 mb-2">{reply.content}</p>
+                <div className="text-sm text-gray-400">
+                  Posted on {new Date(reply.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
