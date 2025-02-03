@@ -34,6 +34,7 @@ const Index = () => {
     };
 
     fetchForums();
+    createAnimatedBackground();
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -54,6 +55,37 @@ const Index = () => {
       toast.error(error.message);
     }
   };
+
+  function createAnimatedBackground() {
+    const container = document.getElementById('animated-background');
+    if (!container) return;
+    
+    function createCircle() {
+      const circle = document.createElement('div');
+      circle.classList.add('circle');
+      
+      const size = Math.random() * 150 + 50;
+      circle.style.width = `${size}px`;
+      circle.style.height = `${size}px`;
+      
+      circle.style.left = `${Math.random() * 100}%`;
+      circle.style.top = `${Math.random() * 100}%`;
+      
+      circle.style.animationDelay = `${Math.random() * 5}s`;
+      
+      container.appendChild(circle);
+      
+      setTimeout(() => {
+        circle.remove();
+      }, 10000);
+    }
+
+    for (let i = 0; i < 10; i++) {
+      createCircle();
+    }
+
+    setInterval(createCircle, 2000);
+  }
 
   return (
     <div className="min-h-screen">

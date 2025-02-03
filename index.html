@@ -10,41 +10,8 @@
   </head>
   <body class="bg-[#0a0a0a] text-white min-h-screen">
     <div id="animated-background" class="fixed inset-0 -z-10 overflow-hidden"></div>
-    
-    <!-- Navbar -->
-    <nav class="border-b border-white/10 backdrop-blur-sm">
-      <div class="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div class="flex items-center space-x-8">
-          <a href="/" class="text-xl font-bold">Nerd Forums</a>
-          <div class="relative hidden md:block">
-            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="search" placeholder="Search forums..." class="pl-10 w-[300px] h-10 rounded-md bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-          </div>
-        </div>
-        <div class="flex items-center space-x-4">
-          <button class="px-4 py-2 rounded-md hover:bg-white/10 transition-colors">Login</button>
-          <button class="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 transition-colors">Sign Up</button>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold">Recent Forums</h1>
-        <button id="newForumBtn" class="px-4 py-2 rounded-md bg-purple-600 hover:bg-purple-700 transition-colors hidden">New Forum</button>
-      </div>
-      
-      <div id="forumsList" class="space-y-4">
-        <!-- Forums will be dynamically inserted here -->
-      </div>
-    </main>
-
-    <!-- Add the required Lovable script tag -->
+    <div id="root"></div>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script src="/src/index.js"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
