@@ -133,7 +133,6 @@ const Index = () => {
     };
 
     fetchForums();
-    createAnimatedBackground();
   }, []);
 
   // Search functionality
