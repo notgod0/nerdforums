@@ -18,7 +18,54 @@ const Index = () => {
   const [forums, setForums] = useState<Forum[]>([]);
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Initial auth check
+    const checkUser = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+        
+        if (session?.user) {
+          const { data: adminData } = await supabase
+            .from("admin_users")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .single();
+          setIsAdmin(!!adminData);
+        }
+      } catch (error) {
+        console.error("Error checking auth state:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state changed:", _event, session?.user?.email);
+      setUser(session?.user || null);
+      
+      if (session?.user) {
+        const { data: adminData } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+        setIsAdmin(!!adminData);
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const fetchForums = async () => {
@@ -37,31 +84,22 @@ const Index = () => {
 
     fetchForums();
     createAnimatedBackground();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user || null);
-      if (session?.user) {
-        const { data: adminData } = await supabase
-          .from("admin_users")
-          .select("*")
-          .eq("user_id", session.user.id)
-          .single();
-        setIsAdmin(!!adminData);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const handleLogout = async () => {
     try {
+      setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // Clear user state immediately
+      setUser(null);
+      setIsAdmin(false);
       toast.success("Logged out successfully!");
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -106,6 +144,14 @@ const Index = () => {
     setInterval(createCircle, 3000);
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen relative">
       {/* Navbar */}
@@ -128,18 +174,44 @@ const Index = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <Button onClick={() => navigate("/create-forum")}>New Forum</Button>
+                <Button 
+                  onClick={() => navigate("/create-forum")} 
+                  disabled={loading}
+                >
+                  New Forum
+                </Button>
                 {isAdmin && (
-                  <Button variant="outline" onClick={() => navigate("/admin")}>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate("/admin")}
+                    disabled={loading}
+                  >
                     Admin
                   </Button>
                 )}
-                <Button onClick={handleLogout} variant="outline">Logout</Button>
+                <Button 
+                  onClick={handleLogout} 
+                  variant="outline"
+                  disabled={loading}
+                >
+                  {loading ? "Loading..." : "Logout"}
+                </Button>
               </>
             ) : (
               <>
-                <Button onClick={() => navigate("/login")} variant="outline">Login</Button>
-                <Button onClick={() => navigate("/signup")}>Sign Up</Button>
+                <Button 
+                  onClick={() => navigate("/login")} 
+                  variant="outline"
+                  disabled={loading}
+                >
+                  Login
+                </Button>
+                <Button 
+                  onClick={() => navigate("/signup")}
+                  disabled={loading}
+                >
+                  Sign Up
+                </Button>
               </>
             )}
           </div>
