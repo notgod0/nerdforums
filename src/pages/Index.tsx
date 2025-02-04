@@ -66,40 +66,50 @@ const Index = () => {
   };
 
   function createAnimatedBackground() {
-    const container = document.getElementById('animated-background');
+    const container = document.body;
     if (!container) return;
+    
+    // Remove existing circles
+    const existingCircles = document.querySelectorAll('.circle');
+    existingCircles.forEach(circle => circle.remove());
     
     function createCircle() {
       const circle = document.createElement('div');
       circle.classList.add('circle');
       
-      const size = Math.random() * 150 + 50;
+      // Random size between 100px and 300px
+      const size = Math.random() * 200 + 100;
       circle.style.width = `${size}px`;
       circle.style.height = `${size}px`;
       
+      // Random position
       circle.style.left = `${Math.random() * 100}%`;
       circle.style.top = `${Math.random() * 100}%`;
       
+      // Random animation delay
       circle.style.animationDelay = `${Math.random() * 5}s`;
       
       container.appendChild(circle);
       
+      // Remove circle after animation
       setTimeout(() => {
         circle.remove();
-      }, 10000);
+      }, 20000);
     }
 
-    for (let i = 0; i < 10; i++) {
+    // Create initial circles
+    for (let i = 0; i < 15; i++) {
       createCircle();
     }
 
-    setInterval(createCircle, 2000);
+    // Create new circles periodically
+    setInterval(createCircle, 3000);
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900/20 to-blue-900/20">
+    <div className="min-h-screen relative">
       {/* Navbar */}
-      <nav className="border-b border-white/10 backdrop-blur-sm bg-black/10">
+      <nav className="relative border-b border-purple-500/20 backdrop-blur-sm bg-black/30 z-20">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <a href="/" className="text-xl font-bold">Nerd Forums</a>
@@ -108,7 +118,11 @@ const Index = () => {
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input type="search" placeholder="Search forums..." className="pl-10 w-[300px] h-10 rounded-md bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
+              <input 
+                type="search" 
+                placeholder="Search forums..." 
+                className="pl-10 w-[300px] h-10 rounded-md bg-purple-950/20 border border-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+              />
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -133,13 +147,13 @@ const Index = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         <div className="space-y-4">
           {forums.map((forum) => (
             <div
               key={forum.id}
               onClick={() => navigate(`/forum/${forum.id}`)}
-              className="forum-card hover:bg-white/15 transition-all duration-300"
+              className="forum-card"
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-lg font-semibold">{forum.title}</h3>
