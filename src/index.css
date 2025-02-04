@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 .circle {
-  position: absolute;
+  position: fixed; /* Changed from absolute to fixed */
   border-radius: 50%;
   background: radial-gradient(circle at center, rgba(147, 51, 234, 0.3), transparent);
   animation: float 20s infinite;
   backdrop-filter: blur(10px);
   opacity: 0.4;
-  z-index: 0;
+  z-index: -1; /* Move particles behind content */
 }
 
 @keyframes float {
