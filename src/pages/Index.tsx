@@ -11,11 +11,13 @@ interface Forum {
   tags: string[];
   created_at: string;
   likes: number;
+  status: string;
 }
 
 const Index = () => {
   const [forums, setForums] = useState<Forum[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,9 +38,16 @@ const Index = () => {
     fetchForums();
     createAnimatedBackground();
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user || null);
+      if (session?.user) {
+        const { data: adminData } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single();
+        setIsAdmin(!!adminData);
+      }
     });
 
     return () => {
@@ -88,9 +97,9 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900/20 to-blue-900/20">
       {/* Navbar */}
-      <nav className="border-b border-white/10 backdrop-blur-sm">
+      <nav className="border-b border-white/10 backdrop-blur-sm bg-black/10">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <a href="/" className="text-xl font-bold">Nerd Forums</a>
@@ -106,6 +115,11 @@ const Index = () => {
             {user ? (
               <>
                 <Button onClick={() => navigate("/create-forum")}>New Forum</Button>
+                {isAdmin && (
+                  <Button variant="outline" onClick={() => navigate("/admin")}>
+                    Admin
+                  </Button>
+                )}
                 <Button onClick={handleLogout} variant="outline">Logout</Button>
               </>
             ) : (
@@ -125,12 +139,17 @@ const Index = () => {
             <div
               key={forum.id}
               onClick={() => navigate(`/forum/${forum.id}`)}
-              className="forum-card"
+              className="forum-card hover:bg-white/15 transition-all duration-300"
             >
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-lg font-semibold">{forum.title}</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-purple-400">❤️ {forum.likes || 0}</span>
+                  <span className={`forum-status ${
+                    forum.status === 'solved' ? 'status-solved' : 'status-open'
+                  }`}>
+                    {forum.status}
+                  </span>
                 </div>
               </div>
               <p className="text-gray-400 mb-4 line-clamp-2">{forum.description}</p>

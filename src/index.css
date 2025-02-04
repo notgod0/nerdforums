@@ -25,7 +25,7 @@
 
 @layer components {
   .forum-card {
-    @apply bg-white/5 p-6 rounded-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer;
+    @apply bg-white/5 p-6 rounded-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer backdrop-blur-sm;
   }
 
   .forum-tag {
@@ -43,4 +43,12 @@
   .status-solved {
     @apply bg-blue-500/20 text-blue-300;
   }
+
+  .status-closed {
+    @apply bg-red-500/20 text-red-300;
+  }
+}
+
+body {
+  @apply bg-gradient-to-br from-purple-900/20 to-blue-900/20 min-h-screen text-white;
 }
