@@ -20,6 +20,7 @@ interface Forum {
   created_at: string;
   user_id: string;
   likes: number;
+  status: string;
 }
 
 const ForumDetails = () => {
@@ -75,6 +76,11 @@ const ForumDetails = () => {
       return;
     }
 
+    if (forum?.status === 'closed' || forum?.status === 'solved') {
+      toast.error("This forum is closed for new replies");
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.from("replies").insert({
@@ -127,6 +133,8 @@ const ForumDetails = () => {
 
   if (!forum) return null;
 
+  const isForumClosed = forum.status === 'closed' || forum.status === 'solved';
+
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -141,7 +149,16 @@ const ForumDetails = () => {
         <div className="bg-white/5 p-8 rounded-lg border border-white/10">
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-3xl font-bold">{forum.title}</h1>
-            <Button onClick={handleLike}>❤️ {forum.likes || 0}</Button>
+            <div className="flex items-center gap-4">
+              <Button onClick={handleLike}>❤️ {forum.likes || 0}</Button>
+              <span className={`forum-status ${
+                forum.status === 'closed' ? 'status-closed' :
+                forum.status === 'solved' ? 'status-solved' :
+                'status-open'
+              }`}>
+                {forum.status}
+              </span>
+            </div>
           </div>
           <p className="text-gray-300 mb-6">{forum.description}</p>
           <div className="flex gap-2 mb-4">
@@ -157,21 +174,33 @@ const ForumDetails = () => {
         <div className="space-y-6">
           <h2 className="text-2xl font-bold">Replies</h2>
           
-          <form onSubmit={handleReply} className="space-y-4">
-            <Textarea
-              value={newReply}
-              onChange={(e) => setNewReply(e.target.value)}
-              placeholder={user ? "Write your reply..." : "Please login to reply"}
-              disabled={!user || loading}
-              className="bg-white/5 border-white/10 min-h-[100px]"
-            />
-            <Button
-              type="submit"
-              disabled={!user || loading || !newReply.trim()}
-            >
-              {loading ? "Posting..." : "Post Reply"}
-            </Button>
-          </form>
+          {!isForumClosed && (
+            <form onSubmit={handleReply} className="space-y-4">
+              <Textarea
+                value={newReply}
+                onChange={(e) => setNewReply(e.target.value)}
+                placeholder={
+                  user 
+                    ? "Write your reply..." 
+                    : "Please login to reply"
+                }
+                disabled={!user || loading}
+                className="bg-white/5 border-white/10 min-h-[100px]"
+              />
+              <Button
+                type="submit"
+                disabled={!user || loading || !newReply.trim()}
+              >
+                {loading ? "Posting..." : "Post Reply"}
+              </Button>
+            </form>
+          )}
+
+          {isForumClosed && (
+            <div className="bg-red-500/20 text-red-200 p-4 rounded-lg">
+              This forum is {forum.status}. No new replies can be added.
+            </div>
+          )}
 
           <div className="space-y-4">
             {replies.map((reply) => (

@@ -21,16 +21,18 @@ const Index = () => {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Initial auth check
     const checkUser = async () => {
       try {
+        console.log("Checking user session...");
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
         
         if (session?.user) {
+          console.log("User found, checking admin status...");
           const { data: adminData } = await supabase
             .from("admin_users")
             .select("*")
@@ -40,14 +42,12 @@ const Index = () => {
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
-      } finally {
-        setLoading(false);
+        setError("Failed to check authentication status");
       }
     };
 
     checkUser();
 
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       console.log("Auth state changed:", _event, session?.user?.email);
       setUser(session?.user || null);
@@ -72,16 +72,23 @@ const Index = () => {
   useEffect(() => {
     const fetchForums = async () => {
       try {
+        console.log("Fetching forums...");
+        setLoading(true);
         const { data, error } = await supabase
           .from("forums")
           .select("*")
           .order("created_at", { ascending: false });
 
         if (error) throw error;
+        console.log("Forums fetched:", data);
         setForums(data || []);
         setFilteredForums(data || []);
       } catch (error: any) {
-        toast.error(error.message);
+        console.error("Error fetching forums:", error);
+        setError(error.message);
+        toast.error("Failed to load forums");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -147,44 +154,18 @@ const Index = () => {
     }
   };
 
-  function createAnimatedBackground() {
-    const container = document.body;
-    if (!container) return;
-    
-    const existingCircles = document.querySelectorAll('.circle');
-    existingCircles.forEach(circle => circle.remove());
-    
-    function createCircle() {
-      const circle = document.createElement('div');
-      circle.classList.add('circle');
-      
-      const size = Math.random() * 200 + 100;
-      circle.style.width = `${size}px`;
-      circle.style.height = `${size}px`;
-      
-      circle.style.left = `${Math.random() * 100}%`;
-      circle.style.top = `${Math.random() * 100}%`;
-      
-      circle.style.animationDelay = `${Math.random() * 5}s`;
-      
-      container.appendChild(circle);
-      
-      setTimeout(() => {
-        circle.remove();
-      }, 20000);
-    }
-
-    for (let i = 0; i < 15; i++) {
-      createCircle();
-    }
-
-    setInterval(createCircle, 3000);
-  }
-
-  if (loading) {
+  if (loading && !error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500">Error: {error}</div>
       </div>
     );
   }
@@ -283,7 +264,9 @@ const Index = () => {
                     ❤️ {forum.likes || 0}
                   </Button>
                   <span className={`forum-status ${
-                    forum.status === 'solved' ? 'status-solved' : 'status-open'
+                    forum.status === 'solved' ? 'status-solved' : 
+                    forum.status === 'closed' ? 'status-closed' : 
+                    'status-open'
                   }`}>
                     {forum.status}
                   </span>
