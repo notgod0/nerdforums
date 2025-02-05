@@ -26,7 +26,12 @@ export const NavBar = ({
     <nav className="relative border-b border-purple-500/20 backdrop-blur-sm bg-black/30 z-20">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center space-x-8">
-          <a href="/" className="text-xl font-bold">Nerd Forums</a>
+          <a href="/" className="flex items-center space-x-2">
+            <span className="text-2xl font-black bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text hover:from-purple-500 hover:to-pink-500 transition-all duration-300">
+              Nerd
+            </span>
+            <span className="text-2xl font-black text-white">Forums</span>
+          </a>
           <div className={`relative ${isMobile ? 'hidden' : ''}`}>
             <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"></circle>
