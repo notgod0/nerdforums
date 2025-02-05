@@ -6,6 +6,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { NavBar } from "@/components/forums/NavBar";
 import { ForumCard } from "@/components/forums/ForumCard";
 import { AnimatedBackground } from "@/components/forums/AnimatedBackground";
+import { AppSidebar } from "@/components/forums/AppSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface Forum {
   id: string;
@@ -256,32 +258,40 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen relative">
-      <AnimatedBackground />
-      <NavBar 
-        user={user}
-        isAdmin={isAdmin}
-        loading={loading}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        onLogout={handleLogout}
-        isMobile={isMobile}
-      />
+    <SidebarProvider>
+      <div className="min-h-screen relative w-full">
+        <AnimatedBackground />
+        <NavBar 
+          user={user}
+          isAdmin={isAdmin}
+          loading={loading}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onLogout={handleLogout}
+          isMobile={isMobile}
+        />
+        <AppSidebar 
+          user={user}
+          isAdmin={isAdmin}
+          loading={loading}
+          onLogout={handleLogout}
+        />
 
-      <main className="container mx-auto px-4 py-8 relative z-10">
-        <div className="space-y-4">
-          {filteredForums.map((forum) => (
-            <ForumCard
-              key={forum.id}
-              forum={forum}
-              userLikes={userLikes}
-              onLike={handleLike}
-              onSearch={setSearchTerm}
-            />
-          ))}
-        </div>
-      </main>
-    </div>
+        <main className="container mx-auto px-4 py-8 relative z-10">
+          <div className="space-y-4">
+            {filteredForums.map((forum) => (
+              <ForumCard
+                key={forum.id}
+                forum={forum}
+                userLikes={userLikes}
+                onLike={handleLike}
+                onSearch={setSearchTerm}
+              />
+            ))}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 

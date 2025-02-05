@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
 
 interface NavBarProps {
   user: any;
@@ -12,12 +14,8 @@ interface NavBarProps {
 }
 
 export const NavBar = ({ 
-  user, 
-  isAdmin, 
-  loading, 
   searchTerm, 
   onSearchChange,
-  onLogout,
   isMobile 
 }: NavBarProps) => {
   const navigate = useNavigate();
@@ -46,49 +44,17 @@ export const NavBar = ({
             />
           </div>
         </div>
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <Button 
-                onClick={() => navigate("/create-forum")} 
-                disabled={loading}
-              >
-                New Forum
-              </Button>
-              {isAdmin && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate("/admin")}
-                  disabled={loading}
-                >
-                  Admin
-                </Button>
-              )}
-              <Button 
-                onClick={onLogout} 
-                variant="outline"
-                disabled={loading}
-              >
-                {loading ? "Loading..." : "Logout"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                onClick={() => navigate("/login")} 
-                variant="outline"
-                disabled={loading}
-              >
-                Login
-              </Button>
-              <Button 
-                onClick={() => navigate("/signup")}
-                disabled={loading}
-              >
-                Sign Up
-              </Button>
-            </>
-          )}
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2"
+            asChild
+          >
+            <SidebarTrigger>
+              <Menu className="h-5 w-5" />
+            </SidebarTrigger>
+          </Button>
         </div>
       </div>
       {isMobile && (
