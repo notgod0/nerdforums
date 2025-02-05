@@ -15,6 +15,8 @@ interface Forum {
   status: string;
 }
 
+const LOADING_TIMEOUT = 10000; // 10 seconds timeout
+
 const Index = () => {
   const [forums, setForums] = useState<Forum[]>([]);
   const [filteredForums, setFilteredForums] = useState<Forum[]>([]);
@@ -109,7 +111,6 @@ const Index = () => {
           .single();
         setIsAdmin(!!adminData);
 
-        // Fetch user likes on auth state change
         const { data: likesData } = await supabase
           .from("forum_likes")
           .select("forum_id")
@@ -130,29 +131,49 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const fetchForums = async () => {
       try {
         console.log("Fetching forums...");
         setLoading(true);
-        const { data, error } = await supabase
+        setError(null);
+
+        // Set a timeout to handle long loading times
+        timeoutId = setTimeout(() => {
+          setLoading(false);
+          setError("Loading timeout - Please try again later");
+          toast.error("Loading timeout - Please try again later");
+        }, LOADING_TIMEOUT);
+
+        const { data, error: supabaseError } = await supabase
           .from("forums")
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        // Clear timeout as we got a response
+        clearTimeout(timeoutId);
+
+        if (supabaseError) throw supabaseError;
+        
         console.log("Forums fetched:", data);
         setForums(data || []);
         setFilteredForums(data || []);
+        setLoading(false);
       } catch (error: any) {
         console.error("Error fetching forums:", error);
         setError(error.message);
         toast.error("Failed to load forums");
-      } finally {
         setLoading(false);
       }
     };
 
     fetchForums();
+
+    // Cleanup timeout if component unmounts
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // Search functionality
@@ -267,8 +288,11 @@ const Index = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">Error: {error}</div>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="text-red-500 mb-4">Error: {error}</div>
+        <Button onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
       </div>
     );
   }
