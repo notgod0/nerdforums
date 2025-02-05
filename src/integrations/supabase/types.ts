@@ -27,6 +27,35 @@ export type Database = {
         }
         Relationships: []
       }
+      forum_likes: {
+        Row: {
+          created_at: string | null
+          forum_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          forum_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          forum_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_likes_forum_id_fkey"
+            columns: ["forum_id"]
+            isOneToOne: false
+            referencedRelation: "forums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forums: {
         Row: {
           created_at: string | null

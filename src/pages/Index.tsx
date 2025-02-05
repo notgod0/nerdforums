@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Forum {
   id: string;
@@ -22,7 +23,9 @@ const Index = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Create animated background circles
   useEffect(() => {
@@ -75,6 +78,16 @@ const Index = () => {
             .eq("user_id", session.user.id)
             .single();
           setIsAdmin(!!adminData);
+
+          // Fetch user likes
+          const { data: likesData } = await supabase
+            .from("forum_likes")
+            .select("forum_id")
+            .eq("user_id", session.user.id);
+          
+          if (likesData) {
+            setUserLikes(new Set(likesData.map(like => like.forum_id)));
+          }
         }
       } catch (error) {
         console.error("Error checking auth state:", error);
@@ -95,8 +108,19 @@ const Index = () => {
           .eq("user_id", session.user.id)
           .single();
         setIsAdmin(!!adminData);
+
+        // Fetch user likes on auth state change
+        const { data: likesData } = await supabase
+          .from("forum_likes")
+          .select("forum_id")
+          .eq("user_id", session.user.id);
+        
+        if (likesData) {
+          setUserLikes(new Set(likesData.map(like => like.forum_id)));
+        }
       } else {
         setIsAdmin(false);
+        setUserLikes(new Set());
       }
     });
 
@@ -167,23 +191,67 @@ const Index = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("forums")
-        .update({ likes: currentLikes + 1 })
-        .eq("id", forumId);
-
-      if (error) throw error;
-
-      // Update local state
-      setForums(prevForums =>
-        prevForums.map(forum =>
-          forum.id === forumId
-            ? { ...forum, likes: (forum.likes || 0) + 1 }
-            : forum
-        )
-      );
+      const isLiked = userLikes.has(forumId);
       
-      toast.success("Forum liked!");
+      if (isLiked) {
+        // Unlike the forum
+        const { error: deleteLikeError } = await supabase
+          .from("forum_likes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("forum_id", forumId);
+
+        if (deleteLikeError) throw deleteLikeError;
+
+        const { error: updateForumError } = await supabase
+          .from("forums")
+          .update({ likes: currentLikes - 1 })
+          .eq("id", forumId);
+
+        if (updateForumError) throw updateForumError;
+
+        setUserLikes(prev => {
+          const newLikes = new Set(prev);
+          newLikes.delete(forumId);
+          return newLikes;
+        });
+
+        setForums(prevForums =>
+          prevForums.map(forum =>
+            forum.id === forumId
+              ? { ...forum, likes: (forum.likes || 0) - 1 }
+              : forum
+          )
+        );
+        
+        toast.success("Forum unliked!");
+      } else {
+        // Like the forum
+        const { error: insertLikeError } = await supabase
+          .from("forum_likes")
+          .insert([{ user_id: user.id, forum_id: forumId }]);
+
+        if (insertLikeError) throw insertLikeError;
+
+        const { error: updateForumError } = await supabase
+          .from("forums")
+          .update({ likes: currentLikes + 1 })
+          .eq("id", forumId);
+
+        if (updateForumError) throw updateForumError;
+
+        setUserLikes(prev => new Set([...prev, forumId]));
+
+        setForums(prevForums =>
+          prevForums.map(forum =>
+            forum.id === forumId
+              ? { ...forum, likes: (forum.likes || 0) + 1 }
+              : forum
+          )
+        );
+        
+        toast.success("Forum liked!");
+      }
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -211,7 +279,7 @@ const Index = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <a href="/" className="text-xl font-bold">Nerd Forums</a>
-            <div className="relative hidden md:block">
+            <div className={`relative ${isMobile ? 'hidden' : ''}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -270,6 +338,24 @@ const Index = () => {
             )}
           </div>
         </div>
+        {/* Mobile search bar */}
+        {isMobile && (
+          <div className="px-4 py-2 border-t border-purple-500/20">
+            <div className="relative">
+              <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input 
+                type="search" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search forums or tags..." 
+                className="pl-10 w-full h-10 rounded-md bg-purple-950/20 border border-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+              />
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="container mx-auto px-4 py-8 relative z-10">
@@ -294,7 +380,7 @@ const Index = () => {
                       e.stopPropagation();
                       handleLike(forum.id, forum.likes || 0);
                     }}
-                    className="text-purple-400"
+                    className={`text-purple-400 ${userLikes.has(forum.id) ? 'bg-purple-500/20' : ''}`}
                   >
                     ❤️ {forum.likes || 0}
                   </Button>
