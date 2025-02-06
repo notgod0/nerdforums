@@ -17,18 +17,20 @@ export const AuthButtons = ({ user, isAdmin, loading, onLogout }: AuthButtonsPro
       <>
         {isAdmin && (
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={() => navigate("/admin")}
             disabled={loading}
+            className="bg-purple-950/20 border-purple-500/20 hover:bg-purple-900/30 hover:border-purple-500/30"
           >
             <Shield className="mr-2 h-4 w-4" />
             Admin
           </Button>
         )}
         <Button
-          variant="ghost"
+          variant="outline"
           onClick={onLogout}
           disabled={loading}
+          className="bg-purple-950/20 border-purple-500/20 hover:bg-purple-900/30 hover:border-purple-500/30"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Logout
@@ -40,17 +42,19 @@ export const AuthButtons = ({ user, isAdmin, loading, onLogout }: AuthButtonsPro
   return (
     <>
       <Button
-        variant="ghost"
+        variant="outline"
         onClick={() => navigate("/login")}
         disabled={loading}
+        className="bg-purple-950/20 border-purple-500/20 hover:bg-purple-900/30 hover:border-purple-500/30"
       >
         <LogIn className="mr-2 h-4 w-4" />
         Login
       </Button>
       <Button
-        variant="ghost"
+        variant="outline"
         onClick={() => navigate("/signup")}
         disabled={loading}
+        className="bg-purple-950/20 border-purple-500/20 hover:bg-purple-900/30 hover:border-purple-500/30"
       >
         <UserPlus className="mr-2 h-4 w-4" />
         Sign Up
