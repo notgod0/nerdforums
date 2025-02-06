@@ -1,10 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
+import { Menu, LogIn, LogOut, UserPlus, Shield } from "lucide-react";
 import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
 import { WelcomeMessage } from "./WelcomeMessage";
-import { AuthButtons } from "./AuthButtons";
 
 interface NavBarProps {
   user: any;
@@ -25,6 +25,8 @@ export const NavBar = ({
   onLogout,
   isMobile 
 }: NavBarProps) => {
+  const navigate = useNavigate();
+
   return (
     <nav className="relative border-b border-purple-500/20 backdrop-blur-sm bg-black/30 z-20">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -38,12 +40,47 @@ export const NavBar = ({
           <WelcomeMessage user={user} />
           {!isMobile && (
             <div className="flex items-center space-x-2">
-              <AuthButtons 
-                user={user}
-                isAdmin={isAdmin}
-                loading={loading}
-                onLogout={onLogout}
-              />
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate("/admin")}
+                      disabled={loading}
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={onLogout}
+                    disabled={loading}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/login")}
+                    disabled={loading}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/signup")}
+                    disabled={loading}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Sign Up
+                  </Button>
+                </>
+              )}
             </div>
           )}
           {isMobile && (
