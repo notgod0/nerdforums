@@ -275,6 +275,7 @@ const Index = () => {
           isAdmin={isAdmin}
           loading={loading}
           onLogout={handleLogout}
+          isMobile={isMobile}
         />
 
         <main className="container mx-auto px-4 py-8 relative z-10">
