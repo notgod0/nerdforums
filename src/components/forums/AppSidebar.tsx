@@ -10,17 +10,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 
 interface AppSidebarProps {
   user: any;
   isAdmin: boolean;
   loading: boolean;
   onLogout: () => void;
+  isMobile: boolean;
 }
 
-export function AppSidebar({ user, isAdmin, loading, onLogout }: AppSidebarProps) {
+export function AppSidebar({ user, isAdmin, loading, onLogout, isMobile }: AppSidebarProps) {
   const navigate = useNavigate();
+
+  if (!isMobile) return null;
 
   return (
     <Sidebar side="right">
