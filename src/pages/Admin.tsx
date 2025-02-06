@@ -123,7 +123,7 @@ const Admin = () => {
                   <select
                     value={forum.status}
                     onChange={(e) => handleUpdateStatus(forum.id, e.target.value)}
-                    className="bg-white/5 border border-white/10 rounded px-2 py-1"
+                    className="bg-black/5 border border-white/10 rounded px-2 py-1"
                   >
                     <option value="open">Open</option>
                     <option value="closed">Closed</option>
