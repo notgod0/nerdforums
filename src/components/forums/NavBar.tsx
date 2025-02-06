@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
+import { Menu, LogIn, LogOut, UserPlus, Shield } from "lucide-react";
 import { Logo } from "./Logo";
 import { SearchBar } from "./SearchBar";
 import { WelcomeMessage } from "./WelcomeMessage";
@@ -18,8 +18,11 @@ interface NavBarProps {
 
 export const NavBar = ({ 
   user,
+  isAdmin,
+  loading,
   searchTerm, 
   onSearchChange,
+  onLogout,
   isMobile 
 }: NavBarProps) => {
   const navigate = useNavigate();
@@ -35,6 +38,51 @@ export const NavBar = ({
         </div>
         <div className="flex items-center space-x-4">
           <WelcomeMessage user={user} />
+          {!isMobile && (
+            <div className="flex items-center space-x-2">
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate("/admin")}
+                      disabled={loading}
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={onLogout}
+                    disabled={loading}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/login")}
+                    disabled={loading}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/signup")}
+                    disabled={loading}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Sign Up
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
           {isMobile && (
             <Button
               variant="ghost"

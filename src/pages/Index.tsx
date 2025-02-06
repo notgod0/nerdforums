@@ -1,13 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { NavBar } from "@/components/forums/NavBar";
-import { ForumCard } from "@/components/forums/ForumCard";
-import { AnimatedBackground } from "@/components/forums/AnimatedBackground";
-import { AppSidebar } from "@/components/forums/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { MainLayout } from "@/components/forums/MainLayout";
 
 interface Forum {
   id: string;
@@ -19,7 +14,7 @@ interface Forum {
   status: string;
 }
 
-const LOADING_TIMEOUT = 10000; // 10 seconds timeout
+const LOADING_TIMEOUT = 10000;
 
 const Index = () => {
   const [forums, setForums] = useState<Forum[]>([]);
@@ -250,49 +245,26 @@ const Index = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="text-red-500 mb-4">Error: {error}</div>
-        <Button onClick={() => window.location.reload()}>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
           Try Again
-        </Button>
+        </button>
       </div>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen relative w-full">
-        <AnimatedBackground />
-        <NavBar 
-          user={user}
-          isAdmin={isAdmin}
-          loading={loading}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onLogout={handleLogout}
-          isMobile={isMobile}
-        />
-        <AppSidebar 
-          user={user}
-          isAdmin={isAdmin}
-          loading={loading}
-          onLogout={handleLogout}
-          isMobile={isMobile}
-        />
-
-        <main className="container mx-auto px-4 py-8 relative z-10">
-          <div className="space-y-4">
-            {filteredForums.map((forum) => (
-              <ForumCard
-                key={forum.id}
-                forum={forum}
-                userLikes={userLikes}
-                onLike={handleLike}
-                onSearch={setSearchTerm}
-              />
-            ))}
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+    <MainLayout
+      user={user}
+      isAdmin={isAdmin}
+      loading={loading}
+      searchTerm={searchTerm}
+      onSearchChange={setSearchTerm}
+      onLogout={handleLogout}
+      isMobile={isMobile}
+      forums={filteredForums}
+      userLikes={userLikes}
+      onLike={handleLike}
+    />
   );
 };
 
