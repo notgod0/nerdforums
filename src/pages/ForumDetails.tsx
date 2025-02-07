@@ -10,7 +10,9 @@ interface Reply {
   content: string;
   created_at: string;
   user_id: string;
-  user_email?: string;
+  profiles?: {
+    email: string;
+  } | null;
 }
 
 interface Forum {
@@ -22,7 +24,9 @@ interface Forum {
   user_id: string;
   likes: number;
   status: string;
-  user_email?: string;
+  profiles?: {
+    email: string;
+  } | null;
 }
 
 const ForumDetails = () => {
@@ -43,7 +47,7 @@ const ForumDetails = () => {
           .from("forums")
           .select(`
             *,
-            user:user_id (
+            profiles (
               email
             )
           `)
@@ -52,18 +56,14 @@ const ForumDetails = () => {
 
         if (forumError) throw forumError;
         
-        // Add user email to forum data
-        setForum({
-          ...forumData,
-          user_email: forumData.user?.email
-        });
+        setForum(forumData);
 
         // Get replies with user emails
         const { data: repliesData, error: repliesError } = await supabase
           .from("replies")
           .select(`
             *,
-            user:user_id (
+            profiles (
               email
             )
           `)
@@ -72,11 +72,7 @@ const ForumDetails = () => {
 
         if (repliesError) throw repliesError;
         
-        // Add user emails to replies data
-        setReplies(repliesData.map(reply => ({
-          ...reply,
-          user_email: reply.user?.email
-        })));
+        setReplies(repliesData);
 
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
@@ -238,7 +234,10 @@ const ForumDetails = () => {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h1 className="text-3xl font-bold mb-2">{forum.title}</h1>
-              <p className="text-sm text-gray-400">Posted by {forum.user_email}</p>
+              <p className="text-sm text-gray-400 mb-1">Posted by {forum.profiles?.email}</p>
+              <p className="text-xs text-gray-500">
+                {new Date(forum.created_at).toLocaleDateString()}
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <Button 
@@ -261,9 +260,6 @@ const ForumDetails = () => {
             {forum.tags?.map((tag) => (
               <span key={tag} className="forum-tag">{tag}</span>
             ))}
-          </div>
-          <div className="text-sm text-gray-400">
-            Posted on {new Date(forum.created_at).toLocaleDateString()}
           </div>
         </div>
 
@@ -304,13 +300,13 @@ const ForumDetails = () => {
                 key={reply.id}
                 className="bg-white/5 p-6 rounded-lg border border-white/10"
               >
-                <p className="text-sm text-gray-400 mb-2">
-                  Posted by {reply.user_email}
+                <p className="text-sm text-gray-400 mb-1">
+                  Posted by {reply.profiles?.email}
                 </p>
-                <p className="text-gray-300 mb-2">{reply.content}</p>
-                <div className="text-sm text-gray-400">
-                  Posted on {new Date(reply.created_at).toLocaleDateString()}
-                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  {new Date(reply.created_at).toLocaleDateString()}
+                </p>
+                <p className="text-gray-300">{reply.content}</p>
               </div>
             ))}
           </div>
