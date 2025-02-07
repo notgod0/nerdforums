@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +38,7 @@ const ForumDetails = () => {
           .from("replies")
           .select(`
             *,
-            profiles!inner (
+            profiles!replies_user_id_fkey (
               email
             )
           `)
@@ -164,7 +165,7 @@ const ForumDetails = () => {
         .from("replies")
         .select(`
           *,
-          profiles (
+          profiles!replies_user_id_fkey (
             email
           )
         `)
@@ -172,7 +173,7 @@ const ForumDetails = () => {
         .order("created_at", { ascending: true });
 
       if (fetchError) throw fetchError;
-      setReplies(data || []);
+      setReplies(data as Reply[]);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
