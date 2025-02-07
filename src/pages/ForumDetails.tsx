@@ -10,6 +10,7 @@ interface Reply {
   content: string;
   created_at: string;
   user_id: string;
+  user_email?: string;
 }
 
 interface Forum {
@@ -21,6 +22,7 @@ interface Forum {
   user_id: string;
   likes: number;
   status: string;
+  user_email?: string;
 }
 
 const ForumDetails = () => {
@@ -31,34 +33,73 @@ const ForumDetails = () => {
   const [newReply, setNewReply] = useState("");
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const fetchForum = async () => {
+    const fetchForumAndLikes = async () => {
       try {
+        // Get forum data with user email
         const { data: forumData, error: forumError } = await supabase
           .from("forums")
-          .select("*")
+          .select(`
+            *,
+            user:user_id (
+              email
+            )
+          `)
           .eq("id", id)
           .single();
 
         if (forumError) throw forumError;
-        setForum(forumData);
+        
+        // Add user email to forum data
+        setForum({
+          ...forumData,
+          user_email: forumData.user?.email
+        });
 
+        // Get replies with user emails
         const { data: repliesData, error: repliesError } = await supabase
           .from("replies")
-          .select("*")
+          .select(`
+            *,
+            user:user_id (
+              email
+            )
+          `)
           .eq("forum_id", id)
           .order("created_at", { ascending: true });
 
         if (repliesError) throw repliesError;
-        setReplies(repliesData || []);
+        
+        // Add user emails to replies data
+        setReplies(repliesData.map(reply => ({
+          ...reply,
+          user_email: reply.user?.email
+        })));
+
+        // Check if user is logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+
+        // If user is logged in, get their likes
+        if (session?.user) {
+          const { data: likesData } = await supabase
+            .from("forum_likes")
+            .select("forum_id")
+            .eq("user_id", session.user.id);
+
+          if (likesData) {
+            setUserLikes(new Set(likesData.map(like => like.forum_id)));
+          }
+        }
       } catch (error: any) {
         toast.error(error.message);
         navigate("/");
       }
     };
 
-    fetchForum();
+    fetchForumAndLikes();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
@@ -68,6 +109,66 @@ const ForumDetails = () => {
       subscription.unsubscribe();
     };
   }, [id, navigate]);
+
+  const handleLike = async () => {
+    if (!user) {
+      toast.error("Please login to like posts");
+      return;
+    }
+
+    if (!forum) return;
+
+    try {
+      const isLiked = userLikes.has(forum.id);
+
+      if (isLiked) {
+        // Unlike the forum
+        const { error: deleteLikeError } = await supabase
+          .from("forum_likes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("forum_id", forum.id);
+
+        if (deleteLikeError) throw deleteLikeError;
+
+        const { error: updateForumError } = await supabase
+          .from("forums")
+          .update({ likes: (forum.likes || 0) - 1 })
+          .eq("id", forum.id);
+
+        if (updateForumError) throw updateForumError;
+
+        setUserLikes(prev => {
+          const newLikes = new Set(prev);
+          newLikes.delete(forum.id);
+          return newLikes;
+        });
+
+        setForum(prev => prev ? { ...prev, likes: (prev.likes || 0) - 1 } : null);
+        toast.success("Forum unliked!");
+      } else {
+        // Like the forum
+        const { error: insertLikeError } = await supabase
+          .from("forum_likes")
+          .insert([{ user_id: user.id, forum_id: forum.id }]);
+
+        if (insertLikeError) throw insertLikeError;
+
+        const { error: updateForumError } = await supabase
+          .from("forums")
+          .update({ likes: (forum.likes || 0) + 1 })
+          .eq("id", forum.id);
+
+        if (updateForumError) throw updateForumError;
+
+        setUserLikes(prev => new Set([...prev, forum.id]));
+        setForum(prev => prev ? { ...prev, likes: (prev.likes || 0) + 1 } : null);
+        toast.success("Forum liked!");
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,40 +195,27 @@ const ForumDetails = () => {
       setNewReply("");
       toast.success("Reply posted successfully!");
 
-      // Refresh replies
+      // Refresh replies with user emails
       const { data, error: fetchError } = await supabase
         .from("replies")
-        .select("*")
+        .select(`
+          *,
+          user:user_id (
+            email
+          )
+        `)
         .eq("forum_id", id)
         .order("created_at", { ascending: true });
 
       if (fetchError) throw fetchError;
-      setReplies(data || []);
+      setReplies(data.map(reply => ({
+        ...reply,
+        user_email: reply.user?.email
+      })));
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleLike = async () => {
-    if (!user) {
-      toast.error("Please login to like");
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("forums")
-        .update({ likes: (forum?.likes || 0) + 1 })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      setForum(prev => prev ? { ...prev, likes: (prev.likes || 0) + 1 } : null);
-      toast.success("Forum liked!");
-    } catch (error: any) {
-      toast.error(error.message);
     }
   };
 
@@ -148,9 +236,17 @@ const ForumDetails = () => {
 
         <div className="bg-white/5 p-8 rounded-lg border border-white/10">
           <div className="flex justify-between items-start mb-6">
-            <h1 className="text-3xl font-bold">{forum.title}</h1>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">{forum.title}</h1>
+              <p className="text-sm text-gray-400">Posted by {forum.user_email}</p>
+            </div>
             <div className="flex items-center gap-4">
-              <Button onClick={handleLike}>❤️ {forum.likes || 0}</Button>
+              <Button 
+                onClick={handleLike}
+                className={`${userLikes.has(forum.id) ? 'bg-purple-500/20' : ''}`}
+              >
+                ❤️ {forum.likes || 0}
+              </Button>
               <span className={`forum-status ${
                 forum.status === 'closed' ? 'status-closed' :
                 forum.status === 'solved' ? 'status-solved' :
@@ -208,6 +304,9 @@ const ForumDetails = () => {
                 key={reply.id}
                 className="bg-white/5 p-6 rounded-lg border border-white/10"
               >
+                <p className="text-sm text-gray-400 mb-2">
+                  Posted by {reply.user_email}
+                </p>
                 <p className="text-gray-300 mb-2">{reply.content}</p>
                 <div className="text-sm text-gray-400">
                   Posted on {new Date(reply.created_at).toLocaleDateString()}
