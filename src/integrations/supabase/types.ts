@@ -118,6 +118,68 @@ export interface Database {
           }
         ]
       }
+      admin_users: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      forum_likes: {
+        Row: {
+          id: string
+          user_id: string
+          forum_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          forum_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          forum_id?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_likes_forum_id_fkey"
+            columns: ["forum_id"]
+            isOneToOne: false
+            referencedRelation: "forums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -132,4 +194,30 @@ export interface Database {
       [_ in never]: never
     }
   }
+}
+
+// Helper types for components
+export interface Forum {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  created_at: string;
+  user_id: string;
+  likes: number;
+  status: string;
+  profiles?: {
+    email: string | null;
+  } | null;
+}
+
+export interface Reply {
+  id: string;
+  content: string;
+  created_at: string;
+  forum_id: string | null;
+  user_id: string;
+  profiles?: {
+    email: string | null;
+  } | null;
 }

@@ -3,16 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MainLayout } from "@/components/forums/MainLayout";
-
-interface Forum {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  created_at: string;
-  likes: number;
-  status: string;
-}
+import { Forum } from "@/integrations/supabase/types";
 
 const LOADING_TIMEOUT = 10000;
 

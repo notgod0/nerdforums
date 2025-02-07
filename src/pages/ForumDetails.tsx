@@ -4,31 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-
-interface Reply {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  forum_id: string | null;
-  profiles?: {
-    email: string | null;
-  } | null;
-}
-
-interface Forum {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  created_at: string;
-  user_id: string;
-  likes: number;
-  status: string;
-  profiles?: {
-    email: string | null;
-  } | null;
-}
+import { Forum, Reply } from "@/integrations/supabase/types";
 
 const ForumDetails = () => {
   const { id } = useParams();
@@ -56,8 +32,7 @@ const ForumDetails = () => {
           .single();
 
         if (forumError) throw forumError;
-        
-        setForum(forumData);
+        setForum(forumData as Forum);
 
         // Get replies with user emails
         const { data: repliesData, error: repliesError } = await supabase
@@ -72,8 +47,7 @@ const ForumDetails = () => {
           .order("created_at", { ascending: true });
 
         if (repliesError) throw repliesError;
-        
-        setReplies(repliesData);
+        setReplies(repliesData as Reply[]);
 
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();

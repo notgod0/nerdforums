@@ -3,14 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-
-interface Forum {
-  id: string;
-  title: string;
-  description: string;
-  created_at: string;
-  status: string;
-}
+import { Forum } from "@/integrations/supabase/types";
 
 const Admin = () => {
   const [isAdmin, setIsAdmin] = useState(false);
