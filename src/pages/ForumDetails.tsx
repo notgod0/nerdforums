@@ -10,8 +10,9 @@ interface Reply {
   content: string;
   created_at: string;
   user_id: string;
+  forum_id: string | null;
   profiles?: {
-    email: string;
+    email: string | null;
   } | null;
 }
 
@@ -25,7 +26,7 @@ interface Forum {
   likes: number;
   status: string;
   profiles?: {
-    email: string;
+    email: string | null;
   } | null;
 }
 
@@ -196,7 +197,7 @@ const ForumDetails = () => {
         .from("replies")
         .select(`
           *,
-          user:user_id (
+          profiles (
             email
           )
         `)
@@ -204,10 +205,7 @@ const ForumDetails = () => {
         .order("created_at", { ascending: true });
 
       if (fetchError) throw fetchError;
-      setReplies(data.map(reply => ({
-        ...reply,
-        user_email: reply.user?.email
-      })));
+      setReplies(data || []);
     } catch (error: any) {
       toast.error(error.message);
     } finally {
