@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,12 +20,12 @@ const ForumDetails = () => {
   useEffect(() => {
     const fetchForumAndLikes = async () => {
       try {
-        // Get forum data with user email
+        // Get forum data with user email from profiles
         const { data: forumData, error: forumError } = await supabase
           .from("forums")
           .select(`
             *,
-            profiles (
+            profiles!forums_user_id_fkey_profiles (
               email
             )
           `)
@@ -39,7 +40,7 @@ const ForumDetails = () => {
           .from("replies")
           .select(`
             *,
-            profiles (
+            profiles!inner (
               email
             )
           `)
