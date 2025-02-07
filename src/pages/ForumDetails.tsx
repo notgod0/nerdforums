@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Forum, Reply } from "@/integrations/supabase/types";
+import { Forum, Reply } from "@/types/forum";
 
 const ForumDetails = () => {
   const { id } = useParams();
@@ -20,7 +19,6 @@ const ForumDetails = () => {
   useEffect(() => {
     const fetchForumAndLikes = async () => {
       try {
-        // Get forum data with user email from profiles
         const { data: forumData, error: forumError } = await supabase
           .from("forums")
           .select(`
@@ -35,7 +33,6 @@ const ForumDetails = () => {
         if (forumError) throw forumError;
         setForum(forumData as Forum);
 
-        // Get replies with user emails
         const { data: repliesData, error: repliesError } = await supabase
           .from("replies")
           .select(`
@@ -50,11 +47,9 @@ const ForumDetails = () => {
         if (repliesError) throw repliesError;
         setReplies(repliesData as Reply[]);
 
-        // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
 
-        // If user is logged in, get their likes
         if (session?.user) {
           const { data: likesData } = await supabase
             .from("forum_likes")
@@ -94,7 +89,6 @@ const ForumDetails = () => {
       const isLiked = userLikes.has(forum.id);
 
       if (isLiked) {
-        // Unlike the forum
         const { error: deleteLikeError } = await supabase
           .from("forum_likes")
           .delete()
@@ -119,7 +113,6 @@ const ForumDetails = () => {
         setForum(prev => prev ? { ...prev, likes: (prev.likes || 0) - 1 } : null);
         toast.success("Forum unliked!");
       } else {
-        // Like the forum
         const { error: insertLikeError } = await supabase
           .from("forum_likes")
           .insert([{ user_id: user.id, forum_id: forum.id }]);
@@ -167,7 +160,6 @@ const ForumDetails = () => {
       setNewReply("");
       toast.success("Reply posted successfully!");
 
-      // Refresh replies with user emails
       const { data, error: fetchError } = await supabase
         .from("replies")
         .select(`
