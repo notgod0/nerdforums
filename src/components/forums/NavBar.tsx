@@ -44,7 +44,7 @@ export const NavBar = ({
                 <>
                   {isAdmin && (
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       onClick={() => navigate("/admin")}
                       disabled={loading}
                     >
@@ -53,7 +53,7 @@ export const NavBar = ({
                     </Button>
                   )}
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     onClick={onLogout}
                     disabled={loading}
                   >
@@ -64,7 +64,7 @@ export const NavBar = ({
               ) : (
                 <>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => navigate("/login")}
                     disabled={loading}
                   >
@@ -72,7 +72,7 @@ export const NavBar = ({
                     Login
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => navigate("/signup")}
                     disabled={loading}
                   >
